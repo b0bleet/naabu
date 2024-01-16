@@ -224,6 +224,7 @@ func (r *Runner) RunEnumeration() error {
 
 		// check if we should stop here or continue with full scan
 		if r.options.OnlyHostDiscovery {
+			r.handleNmap()
 			r.handleOutput(r.scanner.HostDiscoveryResults)
 			return nil
 		}
@@ -271,6 +272,7 @@ func (r *Runner) RunEnumeration() error {
 			}
 		}
 		r.wgscan.Wait()
+		r.handleNmap()
 		r.handleOutput(r.scanner.ScanResults)
 		return nil
 	case r.options.Stream && r.options.Passive: // stream passive
