@@ -222,9 +222,9 @@ func (r *Runner) RunEnumeration() error {
 			time.Sleep(time.Duration(r.options.WarmUpTime) * time.Second)
 		}
 
+		r.handleNmap()
 		// check if we should stop here or continue with full scan
 		if r.options.OnlyHostDiscovery {
-			r.handleNmap()
 			r.handleOutput(r.scanner.HostDiscoveryResults)
 			return nil
 		}
