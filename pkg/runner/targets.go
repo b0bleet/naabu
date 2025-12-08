@@ -15,6 +15,7 @@ import (
 	"github.com/projectdiscovery/naabu/v2/pkg/scan"
 	iputil "github.com/projectdiscovery/utils/ip"
 	readerutil "github.com/projectdiscovery/utils/reader"
+	sliceutil "github.com/projectdiscovery/utils/slice"
 	"github.com/remeh/sizedwaitgroup"
 )
 
@@ -152,6 +153,13 @@ func (r *Runner) AddTarget(target string) error {
 		if ip.To4() != nil {
 			target = ip.To4().String()
 		}
+
+		isDefaultIPVersion := len(r.options.IPVersion) == 1 && sliceutil.Contains(r.options.IPVersion, scan.IPv4)
+		if isDefaultIPVersion && iputil.IsIPv6(target) {
+			r.options.IPVersion = append(r.options.IPVersion, scan.IPv6)
+			gologger.Debug().Msgf("Auto-detected IPv6 address %s, enabling IPv6 scanning\n", target)
+		}
+
 		if r.options.Stream {
 			r.streamChannel <- Target{Cidr: iputil.ToCidr(target).String()}
 		} else {

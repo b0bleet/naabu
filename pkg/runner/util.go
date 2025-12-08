@@ -20,7 +20,9 @@ func (r *Runner) host2ips(target string) (targetIPsV4 []string, targetIPsV6 []st
 			gologger.Warning().Msgf("Could not get IP for host: %s\n", target)
 			return nil, nil, err
 		}
-		if len(r.options.IPVersion) > 0 {
+		isDefaultIPVersion := len(r.options.IPVersion) == 1 && sliceutil.Contains(r.options.IPVersion, scan.IPv4)
+
+		if len(r.options.IPVersion) > 0 && !isDefaultIPVersion {
 			if sliceutil.Contains(r.options.IPVersion, scan.IPv4) {
 				targetIPsV4 = append(targetIPsV4, dnsData.A...)
 			}
@@ -29,13 +31,23 @@ func (r *Runner) host2ips(target string) (targetIPsV4 []string, targetIPsV6 []st
 			}
 		} else {
 			targetIPsV4 = append(targetIPsV4, dnsData.A...)
+			targetIPsV6 = append(targetIPsV6, dnsData.AAAA...)
+
+			if isDefaultIPVersion && len(dnsData.AAAA) > 0 {
+				r.options.IPVersion = append(r.options.IPVersion, scan.IPv6)
+				gologger.Debug().Msgf("Auto-detected IPv6 addresses for %s, enabling IPv6 scanning\n", target)
+			}
 		}
 		if len(targetIPsV4) == 0 && len(targetIPsV6) == 0 {
 			return targetIPsV4, targetIPsV6, fmt.Errorf("no IP addresses found for host: %s", target)
 		}
 	} else {
-		targetIPsV4 = append(targetIPsV6, target)
-		gologger.Debug().Msgf("Found %d addresses for %s\n", len(targetIPsV4), target)
+		if iputil.IsIPv4(target) {
+			targetIPsV4 = append(targetIPsV4, target)
+		} else if iputil.IsIPv6(target) {
+			targetIPsV6 = append(targetIPsV6, target)
+		}
+		gologger.Debug().Msgf("Found %d IPv4 and %d IPv6 addresses for %s\n", len(targetIPsV4), len(targetIPsV6), target)
 	}
 
 	return

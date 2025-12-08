@@ -98,7 +98,8 @@ func NewRunner(options *Options) (*Runner, error) {
 	dnsOptions := dnsx.DefaultOptions
 	dnsOptions.MaxRetries = runner.options.Retries
 	dnsOptions.Hostsfile = true
-	if sliceutil.Contains(options.IPVersion, "6") {
+	isDefaultIPVersion := len(options.IPVersion) == 1 && sliceutil.Contains(options.IPVersion, scan.IPv4)
+	if sliceutil.Contains(options.IPVersion, "6") || isDefaultIPVersion {
 		dnsOptions.QuestionTypes = append(dnsOptions.QuestionTypes, dns.TypeAAAA)
 	}
 	if len(runner.options.baseResolvers) > 0 {
